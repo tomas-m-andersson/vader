@@ -221,7 +221,7 @@ function render(p,d){
       const wd=new Date(ds+'T12:00').getDay(); const helg=wd===0||wd===6;
       return `<li class="day" style="--dc:${dagFarg(ds)}"><div class="n">${dagNamn(ds)}<small>${ds}</small></div><div class="e" title="${t2}">${e}</div>
       <div class="lo">${r(lo)}°</div><div class="range"><i style="left:${left}%;width:${Math.max(w,3)}%"></i></div><div class="hi">${r(hi2)}°</div>
-      ${ps>=0.5?`<div class="rain">💧 ${ps.toFixed(1)} mm · ${d.daily.precipitation_probability_max[i]} % risk</div>`:''}</li>`;}).join('')}
+      <div class="rain">${ps>=0.5?`💧 ${ps.toFixed(1)} mm · ${d.daily.precipitation_probability_max[i]} % risk`:'&nbsp;'}</div></li>`;}).join('')}
   </ul>
 
   <h2 class="rub">Solen</h2>
