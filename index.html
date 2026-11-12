@@ -11,7 +11,8 @@
 <link rel="apple-touch-icon" href="icon-maskable-512.png">
 <style>
 :root{--bg:#e8f2fb;--card:#ffffff;--ink:#1a2433;--mut:#5a6b80;--line:#cfdcea;--acc:#2563d6;--accink:#ffffff;--helg:#ffd84d;--helgink:#3a2c00;--rain:#1f8fd1;--warm:#f08a24;--cold:#1f8fd1}
-@media (prefers-color-scheme:dark){:root{--bg:#101a28;--card:#1a2638;--ink:#eaf1fb;--mut:#9fb1c8;--line:#2b3b52;--acc:#7aa8ff;--accink:#0a1a38;--helg:#e0b92f;--helgink:#241b00;--rain:#7cc4ff;--warm:#ffb15c;--cold:#7cc4ff}}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#101a28;--card:#1a2638;--ink:#eaf1fb;--mut:#9fb1c8;--line:#2b3b52;--acc:#7aa8ff;--accink:#0a1a38;--helg:#e0b92f;--helgink:#241b00;--rain:#7cc4ff;--warm:#ffb15c;--cold:#7cc4ff}}
+:root[data-theme="dark"]{--bg:#101a28;--card:#1a2638;--ink:#eaf1fb;--mut:#9fb1c8;--line:#2b3b52;--acc:#7aa8ff;--accink:#0a1a38;--helg:#e0b92f;--helgink:#241b00;--rain:#7cc4ff;--warm:#ffb15c;--cold:#7cc4ff}
 *,*::before,*::after{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:400 17px/1.5 ui-rounded,"SF Pro Rounded","Nunito","Segoe UI",system-ui,sans-serif;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 main{max-width:640px;margin:0 auto;padding:28px 18px 48px}
@@ -19,6 +20,7 @@ button{font:inherit}
 button:focus-visible,input:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
 .top{display:flex;justify-content:space-between;align-items:center;gap:12px}
 .place{display:flex;gap:4px;padding:4px;border-radius:999px;background:var(--card);box-shadow:0 2px 0 var(--line);overflow-x:auto;min-width:0;scrollbar-width:none}
+.place[hidden]{display:none}
 .chip{height:44px;padding:0 16px;border:0;border-radius:999px;background:transparent;color:var(--mut);font-weight:700;font-size:15px;white-space:nowrap;cursor:pointer;flex:none}
 .chip.on{background:var(--acc);color:var(--accink);font-weight:800}
 .icon-btn{width:44px;height:44px;padding:0;border-radius:50%;display:grid;place-items:center;border:2px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;flex:none}
@@ -68,10 +70,20 @@ dialog input{width:100%;font:inherit;background:var(--card);color:var(--ink);bor
 .res button{display:block;width:100%;text-align:left;border:0;background:var(--bg);color:var(--ink);border-radius:16px;padding:12px 16px;margin-top:8px;cursor:pointer;font-weight:700}
 .res small{color:var(--mut);font-weight:400}
 .res p{color:var(--mut)}
-.saved{margin-top:18px}
-.saved b{font-weight:800}
-.saved div{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
-.saved button{width:36px;height:36px;border-radius:50%;border:2px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+.sek{margin-top:22px}
+.sek h4{margin:0 0 8px;font-size:.95rem;font-weight:800}
+.hint{color:var(--mut);font-size:.88rem;margin:0 0 8px}
+.seg{display:flex;gap:4px;padding:4px;border-radius:999px;background:var(--bg)}
+.seg button{flex:1;height:40px;border:0;border-radius:999px;background:transparent;color:var(--mut);font-weight:700;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--acc);color:var(--accink)}
+.tom{text-align:center;padding:40px 10px}
+.tom .e{font-size:64px}
+.tom p{color:var(--mut);margin:8px 0 18px}
+.saved{margin-top:4px}
+.saved .rad span{font-weight:700}
+.saved .ingen{color:var(--mut);padding:8px 0}
+.saved .rad{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.saved .rad button{width:36px;height:36px;padding:0;border-radius:50%;flex:none;border:2px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
 .close{margin-top:16px;width:100%;height:46px;border:0;border-radius:999px;background:var(--acc);color:var(--accink);font-weight:800;cursor:pointer}
 </style>
 </head>
@@ -79,7 +91,7 @@ dialog input{width:100%;font:inherit;background:var(--card);color:var(--ink);bor
 <main>
   <div class="top">
     <div class="place" id="places"></div>
-    <button class="icon-btn" id="addBtn" aria-label="Lägg till ort" title="Lägg till ort"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+    <button class="icon-btn" id="setBtn" aria-label="Inställningar" title="Inställningar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
   </div>
   <div id="notice"></div>
   <div id="app"><div class="dagrub">Hämtar väder…</div></div>
@@ -87,10 +99,24 @@ dialog input{width:100%;font:inherit;background:var(--card);color:var(--ink);bor
 </main>
 
 <dialog id="dlg">
-  <h3>📍 Lägg till ort</h3>
-  <input id="q" placeholder="Skriv en ort, t.ex. Uppsala" autocomplete="off">
-  <div class="res" id="res"></div>
-  <div class="saved" id="saved"></div>
+  <h3>Inställningar</h3>
+  <div class="sek">
+    <h4>📍 Mina orter</h4>
+    <div class="saved" id="saved"></div>
+  </div>
+  <div class="sek">
+    <h4>➕ Lägg till ort</h4>
+    <input id="q" placeholder="Skriv en ort, t.ex. Uppsala" autocomplete="off">
+    <div class="res" id="res"></div>
+  </div>
+  <div class="sek">
+    <h4>🎨 Tema</h4>
+    <div class="seg" id="tema">
+      <button type="button" data-t="auto">Auto</button>
+      <button type="button" data-t="light">Ljust</button>
+      <button type="button" data-t="dark">Mörkt</button>
+    </div>
+  </div>
   <button class="close" id="closeDlg">Klar</button>
 </dialog>
 
@@ -123,12 +149,13 @@ function wx(code, day=1){
 
 // ---------- Platser (sparas i webbläsaren) ----------
 let places, cur;
-try{ places = JSON.parse(localStorage.getItem('vader-orter')) || DEFAULT_PLACES; }catch(e){ places = DEFAULT_PLACES; }
+try{ const sp=localStorage.getItem('vader-orter'); places = sp!==null ? JSON.parse(sp) : DEFAULT_PLACES; }catch(e){ places = DEFAULT_PLACES; }
 try{ cur = +localStorage.getItem('vader-vald') || 0; }catch(e){ cur = 0; }
 if(cur>=places.length) cur=0;
 function savePlaces(){ try{ localStorage.setItem('vader-orter',JSON.stringify(places)); localStorage.setItem('vader-vald',cur);}catch(e){} }
 
 function renderPlaces(){
+  $('#places').hidden = !places.length;
   $('#places').innerHTML = places.map((p,i)=>`<button class="chip ${i===cur?'on':''}" data-i="${i}">${esc(p.namn)}</button>`).join('');
   document.querySelectorAll('#places .chip').forEach(b=>b.onclick=()=>{cur=+b.dataset.i;savePlaces();renderPlaces();load();});
 }
@@ -174,6 +201,11 @@ function sampleWeather(){
 
 async function load(){
   const p=places[cur];
+  if(!p){
+    $('#notice').innerHTML='';
+    $('#app').innerHTML=`<div class="tom"><div class="e">📍</div><h2>Ingen ort vald</h2><p>Tryck på kugghjulet och lägg till en ort för att se vädret.</p><button class="close" style="width:auto;padding:0 24px" onclick="openSettings()">Öppna inställningar</button></div>`;
+    return;
+  }
   let data;
   try{ data = await fetchWeather(p); $('#notice').innerHTML=''; }
   catch(e){ data = sampleWeather(); $('#notice').innerHTML='<div class="notice">⚠️ Kunde inte hämta riktigt väder – visar <b>påhittat exempelväder</b>. När appen ligger på GitHub Pages hämtas riktig data.</div>'; }
@@ -233,14 +265,32 @@ function render(p,d){
 }
 function dagsljus(a,b){ const m=(new Date(b)-new Date(a))/6e4; return `${Math.floor(m/60)} h ${pad(Math.round(m%60))} min`; }
 
-// ---------- Lägg till / ta bort orter ----------
+// ---------- Inställningar ----------
 const dlg=$('#dlg');
 function renderSaved(){
-  $('#saved').innerHTML = '<b>Sparade orter</b>' + places.map((p,i)=>`<div><span>${esc(p.namn)}</span>${places.length>1?`<button data-i="${i}" title="Ta bort">✕</button>`:''}</div>`).join('');
-  document.querySelectorAll('#saved button').forEach(b=>b.onclick=()=>{places.splice(+b.dataset.i,1); cur=0; savePlaces(); renderSaved(); renderPlaces(); load();});
+  $('#saved').innerHTML = places.length
+    ? places.map((p,i)=>`<div class="rad"><span>${esc(p.namn)}</span><button data-i="${i}" aria-label="Ta bort ${esc(p.namn)}" title="Ta bort">✕</button></div>`).join('')
+    : '<div class="ingen">Inga orter sparade ännu.</div>';
+  document.querySelectorAll('#saved button').forEach(b=>b.onclick=()=>{
+    const i=+b.dataset.i; places.splice(i,1);
+    if(cur>=places.length) cur=Math.max(places.length-1,0); else if(i<cur) cur--;
+    savePlaces(); renderSaved(); renderPlaces(); load();
+  });
 }
-$('#addBtn').onclick=()=>{ $('#q').value=''; $('#res').innerHTML=''; renderSaved(); dlg.showModal(); $('#q').focus(); };
+function openSettings(){ $('#q').value=''; $('#res').innerHTML=''; renderSaved(); renderTema(); dlg.showModal(); }
+$('#setBtn').onclick=openSettings;
 $('#closeDlg').onclick=()=>dlg.close();
+
+// Tema (Auto följer telefonens inställning)
+function getTema(){ try{ return localStorage.getItem('vader-tema')||'auto'; }catch(e){ return 'auto'; } }
+function setTema(t){
+  if(t==='auto') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme',t);
+  try{ localStorage.setItem('vader-tema',t); }catch(e){}
+  renderTema();
+}
+function renderTema(){ const t=getTema(); document.querySelectorAll('#tema button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.t===t)); }
+document.querySelectorAll('#tema button').forEach(b=>b.onclick=()=>setTema(b.dataset.t));
+setTema(getTema());
 let timer;
 $('#q').oninput=e=>{
   clearTimeout(timer); const q=e.target.value.trim(); if(q.length<2){$('#res').innerHTML='';return;}
@@ -249,7 +299,7 @@ $('#q').oninput=e=>{
       const res=await fetch('https://geocoding-api.open-meteo.com/v1/search?count=6&language=sv&format=json&name='+encodeURIComponent(q));
       const j=await res.json(); const list=(j.results||[]);
       $('#res').innerHTML = list.length? list.map((x,i)=>`<button data-i="${i}">${esc(x.name)}<br><small>${esc([x.admin1,x.country].filter(Boolean).join(', '))}</small></button>`).join('') : '<p>Hittade ingen ort med det namnet.</p>';
-      document.querySelectorAll('#res button').forEach(b=>b.onclick=()=>{const x=list[+b.dataset.i]; places.push({namn:x.name,lat:x.latitude,lon:x.longitude}); cur=places.length-1; savePlaces(); renderPlaces(); load(); dlg.close();});
+      document.querySelectorAll('#res button').forEach(b=>b.onclick=()=>{const x=list[+b.dataset.i]; places.push({namn:x.name,lat:x.latitude,lon:x.longitude}); cur=places.length-1; savePlaces(); renderPlaces(); load(); $('#q').value=''; $('#res').innerHTML=''; renderSaved();});
     }catch(err){ $('#res').innerHTML='<p>Sökningen fungerar först när appen ligger på GitHub Pages (förhandsvisningen når inte internet).</p>'; }
   },350);
 };
