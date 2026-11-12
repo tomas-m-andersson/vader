@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#e8f2fb" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#101a28" media="(prefers-color-scheme: dark)">
+<title>Väder</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-maskable-512.png">
+<style>
+:root{--bg:#e8f2fb;--card:#ffffff;--ink:#1a2433;--mut:#5a6b80;--line:#cfdcea;--acc:#2563d6;--accink:#ffffff;--helg:#ffd84d;--helgink:#3a2c00;--rain:#1f8fd1;--warm:#f08a24;--cold:#1f8fd1}
+@media (prefers-color-scheme:dark){:root{--bg:#101a28;--card:#1a2638;--ink:#eaf1fb;--mut:#9fb1c8;--line:#2b3b52;--acc:#7aa8ff;--accink:#0a1a38;--helg:#e0b92f;--helgink:#241b00;--rain:#7cc4ff;--warm:#ffb15c;--cold:#7cc4ff}}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 17px/1.5 ui-rounded,"SF Pro Rounded","Nunito","Segoe UI",system-ui,sans-serif;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+main{max-width:640px;margin:0 auto;padding:28px 18px 48px}
+button{font:inherit}
+button:focus-visible,input:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.place{display:flex;gap:4px;padding:4px;border-radius:999px;background:var(--card);box-shadow:0 2px 0 var(--line);overflow-x:auto;min-width:0;scrollbar-width:none}
+.chip{height:44px;padding:0 16px;border:0;border-radius:999px;background:transparent;color:var(--mut);font-weight:700;font-size:15px;white-space:nowrap;cursor:pointer;flex:none}
+.chip.on{background:var(--acc);color:var(--accink);font-weight:800}
+.icon-btn{width:44px;height:44px;padding:0;border-radius:50%;display:grid;place-items:center;border:2px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;flex:none}
+.icon-btn svg{width:22px;height:22px}
+.dagrub{margin:26px 0 16px;font-size:.92rem;font-weight:700;color:var(--mut)}
+.notice{background:var(--helg);color:var(--helgink);border-radius:20px;padding:12px 16px;font-size:.9rem;font-weight:600;margin-top:18px}
+.kort{background:var(--card);border-radius:24px;box-shadow:0 2px 0 var(--line);padding:18px 20px;margin:0 0 14px}
+.rub{margin:32px 4px 12px;font-size:.95rem;font-weight:800}
+.hero{display:flex;align-items:center;gap:16px}
+.hero .emoji{font-size:72px;line-height:1}
+.hero .temp{font-size:clamp(3.2rem,16vw,4.4rem);font-weight:800;letter-spacing:-.03em;line-height:1;color:var(--acc)}
+.hero .desc{font-size:clamp(1.3rem,6vw,1.6rem);font-weight:600;line-height:1.15;margin-top:12px}
+.hero .desc b{font-weight:800}
+.feels{color:var(--mut);font-size:.9rem;font-weight:700;margin-top:6px}
+.rutor{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:0 0 4px}
+.ruta{border-radius:22px;background:var(--card);box-shadow:0 2px 0 var(--line);padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.ruta .l{font-size:.82rem;font-weight:700;color:var(--mut)}
+.ruta .v{font-size:1.5rem;font-weight:800;line-height:1}
+.hours{display:flex;gap:6px;overflow-x:auto;padding:4px 2px 6px;scrollbar-width:thin}
+.h{flex:none;width:60px;text-align:center;padding:10px 0;border-radius:18px}
+.h.now{background:var(--acc);color:var(--accink)}
+.h.now .t,.h.now .p{color:var(--accink)}
+.h .t{font-size:.8rem;font-weight:700;color:var(--mut)}
+.h .e{font-size:26px;margin:4px 0}
+.h .d{font-weight:800}
+.h .p{font-size:.75rem;font-weight:700;color:var(--rain);min-height:16px}
+ul.dagar{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.day{display:grid;grid-template-columns:86px 34px 38px 1fr 38px;align-items:center;gap:8px;background:var(--card);border-radius:20px;box-shadow:inset 8px 0 0 var(--dc),0 2px 0 var(--line);padding:12px 16px 12px 22px}
+.day .n{font-weight:800;line-height:1.2}
+.day .n small{display:block;font-weight:400;color:var(--mut);font-size:.78rem}
+.day .e{font-size:24px;text-align:center}
+.day .lo{color:var(--mut);text-align:right;font-weight:600}
+.day .hi{font-weight:800}
+.range{height:8px;border-radius:999px;background:var(--line);position:relative}
+.range i{position:absolute;top:0;bottom:0;border-radius:999px;background:linear-gradient(90deg,var(--cold),var(--warm))}
+.day .rain{grid-column:1/-1;font-size:.8rem;font-weight:700;color:var(--rain);margin-top:-2px}
+.helgbadge{display:inline-block;background:var(--helg);color:var(--helgink);border-radius:99px;padding:0 8px;font-size:.68rem;font-weight:800;margin-top:2px}
+.sun{display:grid;grid-template-columns:repeat(3,1fr);text-align:center;gap:8px}
+.sun .v{font-size:1.25rem;font-weight:800}
+.sun .l{font-size:.82rem;font-weight:700;color:var(--mut)}
+.foot{text-align:center;font-size:.8rem;color:var(--mut);margin-top:24px}
+.foot a{color:var(--mut)}
+dialog{border:0;border-radius:20px;padding:20px;width:min(92vw,440px);background:var(--card);color:var(--ink);box-shadow:0 12px 40px rgba(0,0,0,.35)}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+dialog h3{margin:0 0 12px;font-weight:800}
+dialog input{width:100%;font:inherit;background:var(--card);color:var(--ink);border:2px solid var(--line);border-radius:999px;padding:11px 18px}
+.res button{display:block;width:100%;text-align:left;border:0;background:var(--bg);color:var(--ink);border-radius:16px;padding:12px 16px;margin-top:8px;cursor:pointer;font-weight:700}
+.res small{color:var(--mut);font-weight:400}
+.res p{color:var(--mut)}
+.saved{margin-top:18px}
+.saved b{font-weight:800}
+.saved div{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.saved button{width:36px;height:36px;border-radius:50%;border:2px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+.close{margin-top:16px;width:100%;height:46px;border:0;border-radius:999px;background:var(--acc);color:var(--accink);font-weight:800;cursor:pointer}
+</style>
+</head>
+<body>
+<main>
+  <div class="top">
+    <div class="place" id="places"></div>
+    <button class="icon-btn" id="addBtn" aria-label="Lägg till ort" title="Lägg till ort"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+  </div>
+  <div id="notice"></div>
+  <div id="app"><div class="dagrub">Hämtar väder…</div></div>
+  <div class="foot">Väderdata: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> (bl.a. SMHI:s och MET Norways modeller)</div>
+</main>
+
+<dialog id="dlg">
+  <h3>📍 Lägg till ort</h3>
+  <input id="q" placeholder="Skriv en ort, t.ex. Uppsala" autocomplete="off">
+  <div class="res" id="res"></div>
+  <div class="saved" id="saved"></div>
+  <button class="close" id="closeDlg">Klar</button>
+</dialog>
+
+<script>
+// ---------- Grundinställningar ----------
+const DEFAULT_PLACES = [{namn:'Stockholm',lat:59.3293,lon:18.0686}];
+const $ = s => document.querySelector(s);
+const pad = n => String(n).padStart(2,'0');
+const isoDate = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const DAGAR = ['Sön','Mån','Tis','Ons','Tor','Fre','Lör'];
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const r = n => Math.round(n);
+
+// WMO-väderkoder → svensk text + emoji (dag/natt)
+function wx(code, day=1){
+  const T = {
+    0:['Klart', day?'☀️':'🌙'], 1:['Mestadels klart', day?'🌤️':'🌙'], 2:['Halvklart', day?'⛅':'☁️'], 3:['Mulet','☁️'],
+    45:['Dimma','🌫️'], 48:['Rimfrost och dimma','🌫️'],
+    51:['Lätt duggregn','🌦️'], 53:['Duggregn','🌦️'], 55:['Kraftigt duggregn','🌧️'],
+    56:['Underkylt duggregn','🧊'], 57:['Underkylt duggregn','🧊'],
+    61:['Lätt regn','🌦️'], 63:['Regn','🌧️'], 65:['Kraftigt regn','🌧️'],
+    66:['Underkylt regn','🧊'], 67:['Underkylt regn','🧊'],
+    71:['Lätt snöfall','🌨️'], 73:['Snöfall','🌨️'], 75:['Kraftigt snöfall','❄️'], 77:['Snökorn','🌨️'],
+    80:['Regnskurar','🌦️'], 81:['Regnskurar','🌧️'], 82:['Kraftiga skurar','⛈️'],
+    85:['Snöbyar','🌨️'], 86:['Kraftiga snöbyar','❄️'],
+    95:['Åska','⛈️'], 96:['Åska med hagel','⛈️'], 99:['Åska med hagel','⛈️']
+  };
+  return T[code] || ['Okänt','🌡️'];
+}
+
+// ---------- Platser (sparas i webbläsaren) ----------
+let places, cur;
+try{ places = JSON.parse(localStorage.getItem('vader-orter')) || DEFAULT_PLACES; }catch(e){ places = DEFAULT_PLACES; }
+try{ cur = +localStorage.getItem('vader-vald') || 0; }catch(e){ cur = 0; }
+if(cur>=places.length) cur=0;
+function savePlaces(){ try{ localStorage.setItem('vader-orter',JSON.stringify(places)); localStorage.setItem('vader-vald',cur);}catch(e){} }
+
+function renderPlaces(){
+  $('#places').innerHTML = places.map((p,i)=>`<button class="chip ${i===cur?'on':''}" data-i="${i}">${esc(p.namn)}</button>`).join('');
+  document.querySelectorAll('#places .chip').forEach(b=>b.onclick=()=>{cur=+b.dataset.i;savePlaces();renderPlaces();load();});
+}
+
+// ---------- Hämta väder ----------
+async function fetchWeather(p){
+  const url = 'https://api.open-meteo.com/v1/forecast?latitude='+p.lat+'&longitude='+p.lon+
+    '&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,wind_gusts_10m,precipitation,relative_humidity_2m,is_day'+
+    '&hourly=temperature_2m,precipitation_probability,precipitation,weather_code,is_day'+
+    '&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,sunrise,sunset,wind_speed_10m_max'+
+    '&timezone=Europe%2FStockholm&wind_speed_unit=ms&forecast_days=10';
+  const res = await fetch(url); if(!res.ok) throw new Error('HTTP '+res.status);
+  return res.json();
+}
+// Påhittat exempelväder (används när internet inte går att nå, t.ex. i förhandsvisningen)
+function sampleWeather(){
+  const now=new Date(); now.setMinutes(0,0,0);
+  const hourly={time:[],temperature_2m:[],precipitation_probability:[],precipitation:[],weather_code:[],is_day:[]};
+  const codes=[3,3,61,63,61,3,2,1,0,0,1,2,3,71,73,3,2,1,0,0,2,3,3,61];
+  const start=new Date(now); start.setHours(0);
+  for(let i=0;i<24*10;i++){
+    const d=new Date(start.getTime()+i*36e5), h=d.getHours();
+    hourly.time.push(isoDate(d)+'T'+pad(h)+':00');
+    hourly.temperature_2m.push(+(3+3*Math.sin((h-9)/24*2*Math.PI)-i/120).toFixed(1));
+    const c=codes[Math.floor(i/3)%codes.length]; hourly.weather_code.push(c);
+    hourly.precipitation_probability.push([61,63,71,73].includes(c)?70:10);
+    hourly.precipitation.push([61,63,71,73].includes(c)?0.6:0);
+    hourly.is_day.push(h>=8&&h<16?1:0);
+  }
+  const daily={time:[],weather_code:[],temperature_2m_max:[],temperature_2m_min:[],precipitation_sum:[],precipitation_probability_max:[],sunrise:[],sunset:[],wind_speed_10m_max:[]};
+  const dc=[61,3,1,73,2,0,63,3,71,1];
+  for(let i=0;i<10;i++){
+    const d=new Date(start.getTime()+i*864e5), ds=isoDate(d);
+    daily.time.push(ds); daily.weather_code.push(dc[i]);
+    daily.temperature_2m_max.push(6-i*0.6); daily.temperature_2m_min.push(0-i*0.8);
+    daily.precipitation_sum.push([61,63,71,73].includes(dc[i])?3.2:0);
+    daily.precipitation_probability_max.push([61,63,71,73].includes(dc[i])?80:10);
+    daily.sunrise.push(ds+'T07:52'); daily.sunset.push(ds+'T15:21'); daily.wind_speed_10m_max.push(5+i%3);
+  }
+  const ci=hourly.time.indexOf(isoDate(now)+'T'+pad(now.getHours())+':00');
+  return {sample:true,current:{temperature_2m:hourly.temperature_2m[ci],apparent_temperature:hourly.temperature_2m[ci]-3,weather_code:hourly.weather_code[ci],wind_speed_10m:4.2,wind_gusts_10m:9.1,precipitation:hourly.precipitation[ci],relative_humidity_2m:86,is_day:hourly.is_day[ci]},hourly,daily};
+}
+
+async function load(){
+  const p=places[cur];
+  let data;
+  try{ data = await fetchWeather(p); $('#notice').innerHTML=''; }
+  catch(e){ data = sampleWeather(); $('#notice').innerHTML='<div class="notice">⚠️ Kunde inte hämta riktigt väder – visar <b>påhittat exempelväder</b>. När appen ligger på GitHub Pages hämtas riktig data.</div>'; }
+  render(p,data);
+}
+
+// ---------- Rita upp ----------
+function render(p,d){
+  const c=d.current, [txt,emo]=wx(c.weather_code,c.is_day);
+  const now=new Date(), nowKey=isoDate(now)+'T'+pad(now.getHours())+':00';
+  let hi=d.hourly.time.indexOf(nowKey); if(hi<0) hi=0;
+  const hrs=[]; for(let i=hi;i<hi+24&&i<d.hourly.time.length;i++) hrs.push(i);
+
+  const all=d.daily.temperature_2m_min.concat(d.daily.temperature_2m_max);
+  const mn=Math.min(...all), mx=Math.max(...all), span=Math.max(mx-mn,1);
+  const today=isoDate(now), tm=isoDate(new Date(now.getTime()+864e5));
+  const dagNamn=ds=> ds===today?'Idag':ds===tm?'Imorgon':DAGAR[new Date(ds+'T12:00').getDay()];
+
+  const VECKODAG=['Söndag','Måndag','Tisdag','Onsdag','Torsdag','Fredag','Lördag'];
+  const FARG=['#e5484d','#f08a24','#e2b007','#2f9e5b','#1f8fd1','#6e56cf','#d6409f']; // mån–sön som i Mat
+  const dagFarg=ds=>FARG[(new Date(ds+'T12:00').getDay()+6)%7];
+  $('#app').innerHTML = `
+  <div class="dagrub">${VECKODAG[now.getDay()]} ${today} · ${pad(now.getHours())}:${pad(now.getMinutes())}</div>
+  <div class="kort">
+    <div class="hero"><div class="emoji">${emo}</div><div class="temp">${r(c.temperature_2m)}°</div></div>
+    <div class="desc">Just nu är det <b>${txt.toLowerCase()}</b> i ${esc(p.namn)}</div>
+    <div class="feels">Känns som ${r(c.apparent_temperature)}° · Idag ${r(d.daily.temperature_2m_min[0])}° till ${r(d.daily.temperature_2m_max[0])}°</div>
+  </div>
+
+  <div class="rutor">
+    <div class="ruta"><span class="l">Vind</span><span class="v">${c.wind_speed_10m.toFixed(0)} m/s</span><span class="l">Byar ${c.wind_gusts_10m.toFixed(0)} m/s</span></div>
+    <div class="ruta"><span class="l">Nederbörd idag</span><span class="v">${(d.daily.precipitation_sum[0]||0).toFixed(1)} mm</span><span class="l">Luftfuktighet ${r(c.relative_humidity_2m)} %</span></div>
+  </div>
+
+  <h2 class="rub">Kommande 24 timmar</h2>
+  <div class="kort" style="padding:12px 10px"><div class="hours">
+    ${hrs.map((i,k)=>{const t=d.hourly.time[i].slice(11,13); const [,e]=wx(d.hourly.weather_code[i],d.hourly.is_day[i]); const pp=d.hourly.precipitation_probability[i];
+      return `<div class="h ${k===0?'now':''}"><div class="t">${k===0?'Nu':t}</div><div class="e">${e}</div><div class="d">${r(d.hourly.temperature_2m[i])}°</div><div class="p">${pp>=20?pp+' %':''}</div></div>`;}).join('')}
+  </div></div>
+
+  <h2 class="rub">10 dagar</h2>
+  <ul class="dagar">
+    ${d.daily.time.map((ds,i)=>{const [t2,e]=wx(d.daily.weather_code[i],1); const lo=d.daily.temperature_2m_min[i], hi2=d.daily.temperature_2m_max[i];
+      const left=(lo-mn)/span*100, w=(hi2-lo)/span*100; const ps=d.daily.precipitation_sum[i];
+      const wd=new Date(ds+'T12:00').getDay(); const helg=wd===0||wd===6;
+      return `<li class="day" style="--dc:${dagFarg(ds)}"><div class="n">${dagNamn(ds)}<small>${ds}</small></div><div class="e" title="${t2}">${e}</div>
+      <div class="lo">${r(lo)}°</div><div class="range"><i style="left:${left}%;width:${Math.max(w,3)}%"></i></div><div class="hi">${r(hi2)}°</div>
+      ${ps>=0.5?`<div class="rain">💧 ${ps.toFixed(1)} mm · ${d.daily.precipitation_probability_max[i]} % risk</div>`:''}</li>`;}).join('')}
+  </ul>
+
+  <h2 class="rub">Solen</h2>
+  <div class="kort"><div class="sun">
+    <div><div class="v">🌅 ${d.daily.sunrise[0].slice(11,16)}</div><div class="l">Soluppgång</div></div>
+    <div><div class="v">🌇 ${d.daily.sunset[0].slice(11,16)}</div><div class="l">Solnedgång</div></div>
+    <div><div class="v">${dagsljus(d.daily.sunrise[0],d.daily.sunset[0])}</div><div class="l">Dagsljus</div></div>
+  </div></div>`;
+}
+function dagsljus(a,b){ const m=(new Date(b)-new Date(a))/6e4; return `${Math.floor(m/60)} h ${pad(Math.round(m%60))} min`; }
+
+// ---------- Lägg till / ta bort orter ----------
+const dlg=$('#dlg');
+function renderSaved(){
+  $('#saved').innerHTML = '<b>Sparade orter</b>' + places.map((p,i)=>`<div><span>${esc(p.namn)}</span>${places.length>1?`<button data-i="${i}" title="Ta bort">✕</button>`:''}</div>`).join('');
+  document.querySelectorAll('#saved button').forEach(b=>b.onclick=()=>{places.splice(+b.dataset.i,1); cur=0; savePlaces(); renderSaved(); renderPlaces(); load();});
+}
+$('#addBtn').onclick=()=>{ $('#q').value=''; $('#res').innerHTML=''; renderSaved(); dlg.showModal(); $('#q').focus(); };
+$('#closeDlg').onclick=()=>dlg.close();
+let timer;
+$('#q').oninput=e=>{
+  clearTimeout(timer); const q=e.target.value.trim(); if(q.length<2){$('#res').innerHTML='';return;}
+  timer=setTimeout(async()=>{
+    try{
+      const res=await fetch('https://geocoding-api.open-meteo.com/v1/search?count=6&language=sv&format=json&name='+encodeURIComponent(q));
+      const j=await res.json(); const list=(j.results||[]);
+      $('#res').innerHTML = list.length? list.map((x,i)=>`<button data-i="${i}">${esc(x.name)}<br><small>${esc([x.admin1,x.country].filter(Boolean).join(', '))}</small></button>`).join('') : '<p>Hittade ingen ort med det namnet.</p>';
+      document.querySelectorAll('#res button').forEach(b=>b.onclick=()=>{const x=list[+b.dataset.i]; places.push({namn:x.name,lat:x.latitude,lon:x.longitude}); cur=places.length-1; savePlaces(); renderPlaces(); load(); dlg.close();});
+    }catch(err){ $('#res').innerHTML='<p>Sökningen fungerar först när appen ligger på GitHub Pages (förhandsvisningen når inte internet).</p>'; }
+  },350);
+};
+
+// ---------- Start ----------
+renderPlaces(); load();
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+setInterval(load, 30*60*1000); // uppdatera var 30:e minut
+</script>
+</body>
+</html>
