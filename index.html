@@ -59,7 +59,10 @@ ul.dagar{list-style:none;margin:0;padding:0;display:grid;gap:8px}
 .day .rain{grid-column:1/-1;font-size:.8rem;font-weight:700;color:var(--rain);margin-top:-2px}
 .helgbadge{display:inline-block;background:var(--helg);color:var(--helgink);border-radius:99px;padding:0 8px;font-size:.68rem;font-weight:800;margin-top:2px}
 .sun{display:grid;grid-template-columns:repeat(3,1fr);text-align:center;gap:8px}
-.sun .v{font-size:1.25rem;font-weight:800}
+.sun>div{display:flex;flex-direction:column;align-items:center;gap:4px}
+.sunikon{width:52px;height:52px;border-radius:50%;background:#14213d;display:grid;place-items:center;margin-bottom:4px}
+.sunikon svg{width:32px;height:32px;display:block}
+.sun .v{font-size:1.25rem;font-weight:800;line-height:1.2}
 .sun .l{font-size:.82rem;font-weight:700;color:var(--mut)}
 .foot{text-align:center;font-size:.8rem;color:var(--mut);margin-top:24px}
 .foot a{color:var(--mut)}
@@ -224,6 +227,7 @@ function render(p,d){
   const today=isoDate(now), tm=isoDate(new Date(now.getTime()+864e5));
   const dagNamn=ds=> ds===today?'Idag':ds===tm?'Imorgon':DAGAR[new Date(ds+'T12:00').getDay()];
 
+  const IKON_UPP='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17a5 5 0 0 1 10 0"/><path d="M4.6 10.1l1.8 1.8M19.4 10.1l-1.8 1.8M2 17h2.5M19.5 17H22M2 21h20"/><path d="M12 4v6M9.5 6.5L12 4l2.5 2.5"/></svg>', IKON_NED='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17a5 5 0 0 1 10 0"/><path d="M4.6 10.1l1.8 1.8M19.4 10.1l-1.8 1.8M2 17h2.5M19.5 17H22M2 21h20"/><path d="M12 4v6M9.5 7.5L12 10l2.5-2.5"/></svg>', IKON_LJUS='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
   const VECKODAG=['Söndag','Måndag','Tisdag','Onsdag','Torsdag','Fredag','Lördag'];
   const FARG=['#e5484d','#f08a24','#e2b007','#2f9e5b','#1f8fd1','#6e56cf','#d6409f']; // mån–sön som i Mat
   const dagFarg=ds=>FARG[(new Date(ds+'T12:00').getDay()+6)%7];
@@ -258,9 +262,9 @@ function render(p,d){
 
   <h2 class="rub">Solen</h2>
   <div class="kort"><div class="sun">
-    <div><div class="v">🌅 ${d.daily.sunrise[0].slice(11,16)}</div><div class="l">Soluppgång</div></div>
-    <div><div class="v">🌇 ${d.daily.sunset[0].slice(11,16)}</div><div class="l">Solnedgång</div></div>
-    <div><div class="v">${dagsljus(d.daily.sunrise[0],d.daily.sunset[0])}</div><div class="l">Dagsljus</div></div>
+    <div><div class="sunikon">${IKON_UPP}</div><div class="v">${d.daily.sunrise[0].slice(11,16)}</div><div class="l">Soluppgång</div></div>
+    <div><div class="sunikon">${IKON_NED}</div><div class="v">${d.daily.sunset[0].slice(11,16)}</div><div class="l">Solnedgång</div></div>
+    <div><div class="sunikon">${IKON_LJUS}</div><div class="v">${dagsljus(d.daily.sunrise[0],d.daily.sunset[0])}</div><div class="l">Dagsljus</div></div>
   </div></div>`;
 }
 function dagsljus(a,b){ const m=(new Date(b)-new Date(a))/6e4; return `${Math.floor(m/60)} h ${pad(Math.round(m%60))} min`; }
