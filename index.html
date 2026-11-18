@@ -18,7 +18,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font:400 17px/1.5 ui-rounded
 main{max-width:640px;margin:0 auto;padding:28px 18px 48px}
 button{font:inherit}
 button:focus-visible,input:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
-.top{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:0 -4px}
 .place{display:flex;gap:4px;padding:4px;border-radius:999px;background:var(--card);box-shadow:0 2px 0 var(--line);overflow-x:auto;min-width:0;scrollbar-width:none}
 .place[hidden]{display:none}
 .chip{height:44px;padding:0 16px;border:0;border-radius:999px;background:transparent;color:var(--mut);font-weight:700;font-size:15px;white-space:nowrap;cursor:pointer;flex:none}
@@ -96,6 +96,12 @@ dialog input{width:100%;font:inherit;background:var(--card);color:var(--ink);bor
 .saved .ingen{color:var(--mut);padding:8px 0}
 .saved .rad{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
 .saved .rad button{width:36px;height:36px;padding:0;border-radius:50%;flex:none;border:2px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+.place{overflow:hidden}
+.chip[data-i]{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;padding:0 11px;font-size:14px}
+.place:has(.plus){gap:2px;padding:3px}
+.chip.plus{flex:none;width:42px;padding:0;font-size:22px;font-weight:800;line-height:1}
+.res.fler button{margin-top:8px}
+.res.fler button.vald{background:var(--acc);color:var(--accink)}
 .close{margin-top:16px;width:100%;height:46px;border:0;border-radius:999px;background:var(--acc);color:var(--accink);font-weight:800;cursor:pointer}
 </style>
 </head>
@@ -109,6 +115,12 @@ dialog input{width:100%;font:inherit;background:var(--card);color:var(--ink);bor
   <div id="app"><div class="dagrub">Hämtar väder…</div></div>
   <div class="foot">Väderdata: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> (bl.a. SMHI:s och MET Norways modeller)</div>
 </main>
+
+<dialog id="flerDlg">
+  <h3>Fler orter</h3>
+  <div class="res fler" id="flerLista"></div>
+  <button class="close" id="flerStang" onclick="document.getElementById('flerDlg').close()">Stäng</button>
+</dialog>
 
 <dialog id="dlg">
   <h3>Inställningar</h3>
@@ -172,10 +184,24 @@ try{ cur = +localStorage.getItem('vader-vald') || 0; }catch(e){ cur = 0; }
 if(cur>=places.length) cur=0;
 function savePlaces(){ try{ localStorage.setItem('vader-orter',JSON.stringify(places)); localStorage.setItem('vader-vald',cur);}catch(e){} }
 
+const MAX_SYNLIGA=3;
+function valjOrt(i){ cur=i; savePlaces(); renderPlaces(); load(); }
 function renderPlaces(){
   $('#places').hidden = !places.length;
-  $('#places').innerHTML = places.map((p,i)=>`<button class="chip ${i===cur?'on':''}" data-i="${i}">${esc(p.namn)}</button>`).join('');
-  document.querySelectorAll('#places .chip').forEach(b=>b.onclick=()=>{cur=+b.dataset.i;savePlaces();renderPlaces();load();});
+  const synliga = places.slice(0,MAX_SYNLIGA);
+  let html = synliga.map((p,i)=>`<button class="chip ${i===cur?'on':''}" data-i="${i}">${esc(p.namn)}</button>`).join('');
+  if(places.length>MAX_SYNLIGA){
+    // "+" är markerad när den valda orten ligger bland de dolda
+    html += `<button class="chip plus ${cur>=MAX_SYNLIGA?'on':''}" id="flerBtn" aria-label="Fler orter" title="Fler orter">+</button>`;
+  }
+  $('#places').innerHTML = html;
+  document.querySelectorAll('#places .chip[data-i]').forEach(b=>b.onclick=()=>valjOrt(+b.dataset.i));
+  const fb=$('#flerBtn'); if(fb) fb.onclick=openFler;
+}
+function openFler(){
+  $('#flerLista').innerHTML = places.map((p,i)=>i<MAX_SYNLIGA?'':`<button class="${i===cur?'vald':''}" data-i="${i}">${esc(p.namn)}</button>`).join('');
+  document.querySelectorAll('#flerLista button').forEach(b=>b.onclick=()=>{ $('#flerDlg').close(); valjOrt(+b.dataset.i); });
+  $('#flerDlg').showModal();
 }
 
 // ---------- Hämta väder ----------
