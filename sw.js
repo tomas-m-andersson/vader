@@ -1,6 +1,6 @@
 // Service worker för Väder: hämtar alltid senaste versionen när du är online
 // och faller tillbaka på sparad kopia när du är offline.
-const CACHE = "vader-v1";
+const CACHE = "vader-v2";
 const SKAL = ["./", "index.html", "manifest.webmanifest", "icon-192.png", "icon-512.png"];
 
 self.addEventListener("install", (e) => {

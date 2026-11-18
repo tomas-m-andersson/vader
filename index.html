@@ -30,7 +30,12 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--acc);outline-of
 .kort{background:var(--card);border-radius:24px;box-shadow:0 2px 0 var(--line);padding:18px 20px;margin:0 0 14px}
 .rub{margin:32px 4px 12px;font-size:.95rem;font-weight:800}
 .hero{display:flex;align-items:center;gap:16px}
-.hero .emoji{font-size:72px;line-height:1}
+.hero .emoji{line-height:0}
+.hero .emoji img{width:92px;height:92px}
+.wxi{display:block;margin:0 auto}
+.wxi{filter:drop-shadow(0 1px 1.5px rgba(26,36,51,.28))}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .wxi{filter:none}}
+:root[data-theme="dark"] .wxi{filter:none}
 .hero .temp{font-size:clamp(3.2rem,16vw,4.4rem);font-weight:800;letter-spacing:-.03em;line-height:1;color:var(--acc)}
 .hero .desc{font-size:clamp(1.3rem,6vw,1.6rem);font-weight:600;line-height:1.15;margin-top:12px}
 .hero .desc b{font-weight:800}
@@ -44,14 +49,15 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--acc);outline-of
 .h.now{background:var(--acc);color:var(--accink)}
 .h.now .t,.h.now .p{color:var(--accink)}
 .h .t{font-size:.8rem;font-weight:700;color:var(--mut)}
-.h .e{font-size:26px;margin:4px 0}
+.h .e{margin:4px 0}
+.h .e img{width:36px;height:36px}
 .h .d{font-weight:800}
 .h .p{font-size:.75rem;font-weight:700;color:var(--rain);min-height:16px}
 ul.dagar{list-style:none;margin:0;padding:0;display:grid;gap:8px}
 .day{display:grid;grid-template-columns:86px 34px 38px 1fr 38px;align-items:center;gap:8px;background:var(--card);border-radius:20px;box-shadow:inset 8px 0 0 var(--dc),0 2px 0 var(--line);padding:12px 16px 12px 22px}
 .day .n{font-weight:800;line-height:1.2}
 .day .n small{display:block;font-weight:400;color:var(--mut);font-size:.78rem}
-.day .e{font-size:24px;text-align:center}
+.day .e img{width:38px;height:38px}
 .day .lo{color:var(--mut);text-align:right;font-weight:600}
 .day .hi{font-weight:800}
 .range{height:8px;border-radius:999px;background:var(--line);position:relative}
@@ -83,7 +89,7 @@ dialog input{width:100%;font:inherit;background:var(--card);color:var(--ink);bor
 .seg button{flex:1;height:40px;border:0;border-radius:999px;background:transparent;color:var(--mut);font-weight:700;cursor:pointer}
 .seg button[aria-pressed="true"]{background:var(--acc);color:var(--accink)}
 .tom{text-align:center;padding:40px 10px}
-.tom .e{font-size:64px}
+.tom .e img{width:96px;height:96px}
 .tom p{color:var(--mut);margin:8px 0 18px}
 .saved{margin-top:4px}
 .saved .rad span{font-weight:700}
@@ -107,16 +113,16 @@ dialog input{width:100%;font:inherit;background:var(--card);color:var(--ink);bor
 <dialog id="dlg">
   <h3>Inställningar</h3>
   <div class="sek">
-    <h4>📍 Mina orter</h4>
+    <h4>Mina orter</h4>
     <div class="saved" id="saved"></div>
   </div>
   <div class="sek">
-    <h4>➕ Lägg till ort</h4>
+    <h4>Lägg till ort</h4>
     <input id="q" placeholder="Skriv en ort, t.ex. Uppsala" autocomplete="off">
     <div class="res" id="res"></div>
   </div>
   <div class="sek">
-    <h4>🎨 Tema</h4>
+    <h4>Tema</h4>
     <div class="seg" id="tema">
       <button type="button" data-t="auto">Auto</button>
       <button type="button" data-t="light">Ljust</button>
@@ -138,19 +144,25 @@ const r = n => Math.round(n);
 
 // WMO-väderkoder → svensk text + emoji (dag/natt)
 function wx(code, day=1){
+  // Text + ikonfil (mappen ikoner/). Dag/natt-varianter där det finns.
+  const D = (dag, natt) => day ? dag : natt;
   const T = {
-    0:['Klart', day?'☀️':'🌙'], 1:['Mestadels klart', day?'🌤️':'🌙'], 2:['Halvklart', day?'⛅':'☁️'], 3:['Mulet','☁️'],
-    45:['Dimma','🌫️'], 48:['Rimfrost och dimma','🌫️'],
-    51:['Lätt duggregn','🌦️'], 53:['Duggregn','🌦️'], 55:['Kraftigt duggregn','🌧️'],
-    56:['Underkylt duggregn','🧊'], 57:['Underkylt duggregn','🧊'],
-    61:['Lätt regn','🌦️'], 63:['Regn','🌧️'], 65:['Kraftigt regn','🌧️'],
-    66:['Underkylt regn','🧊'], 67:['Underkylt regn','🧊'],
-    71:['Lätt snöfall','🌨️'], 73:['Snöfall','🌨️'], 75:['Kraftigt snöfall','❄️'], 77:['Snökorn','🌨️'],
-    80:['Regnskurar','🌦️'], 81:['Regnskurar','🌧️'], 82:['Kraftiga skurar','⛈️'],
-    85:['Snöbyar','🌨️'], 86:['Kraftiga snöbyar','❄️'],
-    95:['Åska','⛈️'], 96:['Åska med hagel','⛈️'], 99:['Åska med hagel','⛈️']
+    0:['Klart', D('day_clear','night_half_moon_clear')],
+    1:['Mestadels klart', D('day_partial_cloud','night_half_moon_partial_cloud')],
+    2:['Halvklart', D('day_partial_cloud','night_half_moon_partial_cloud')],
+    3:['Mulet','overcast'],
+    45:['Dimma','fog'], 48:['Rimfrost och dimma','fog'],
+    51:['Lätt duggregn','rain'], 53:['Duggregn','rain'], 55:['Kraftigt duggregn','rain'],
+    56:['Underkylt duggregn','sleet'], 57:['Underkylt duggregn','sleet'],
+    61:['Lätt regn','rain'], 63:['Regn','rain'], 65:['Kraftigt regn','rain'],
+    66:['Underkylt regn','sleet'], 67:['Underkylt regn','sleet'],
+    71:['Lätt snöfall','snow'], 73:['Snöfall','snow'], 75:['Kraftigt snöfall','snow'], 77:['Snökorn','snow'],
+    80:['Regnskurar', D('day_rain','night_half_moon_rain')], 81:['Regnskurar', D('day_rain','night_half_moon_rain')], 82:['Kraftiga skurar', D('day_rain','night_half_moon_rain')],
+    85:['Snöbyar', D('day_snow','night_half_moon_snow')], 86:['Kraftiga snöbyar', D('day_snow','night_half_moon_snow')],
+    95:['Åska','rain_thunder'], 96:['Åska med hagel','rain_thunder'], 99:['Åska med hagel','rain_thunder']
   };
-  return T[code] || ['Okänt','🌡️'];
+  const [txt, fil] = T[code] || ['Okänt','cloudy'];
+  return [txt, `<img class="wxi" src="ikoner/${fil}.svg" alt="${txt}">`];
 }
 
 // ---------- Platser (sparas i webbläsaren) ----------
@@ -211,12 +223,12 @@ async function load(){
   const p=places[cur];
   if(!p){
     $('#notice').innerHTML='';
-    $('#app').innerHTML=`<div class="tom"><div class="e">📍</div><h2>Ingen ort vald</h2><p>Tryck på kugghjulet och lägg till en ort för att se vädret.</p><button class="close" style="width:auto;padding:0 24px" onclick="openSettings()">Öppna inställningar</button></div>`;
+    $('#app').innerHTML=`<div class="tom"><div class="e"><img class="wxi" src="ikoner/day_partial_cloud.svg" alt=""></div><h2>Ingen ort vald</h2><p>Tryck på kugghjulet och lägg till en ort för att se vädret.</p><button class="close" style="width:auto;padding:0 24px" onclick="openSettings()">Öppna inställningar</button></div>`;
     return;
   }
   let data;
   try{ data = await fetchWeather(p); $('#notice').innerHTML=''; }
-  catch(e){ data = sampleWeather(); $('#notice').innerHTML='<div class="notice">⚠️ Kunde inte hämta riktigt väder – visar <b>påhittat exempelväder</b>. När appen ligger på GitHub Pages hämtas riktig data.</div>'; }
+  catch(e){ data = sampleWeather(); $('#notice').innerHTML='<div class="notice">Kunde inte hämta riktigt väder – visar <b>påhittat exempelväder</b>. När appen ligger på GitHub Pages hämtas riktig data.</div>'; }
   render(p,data);
 }
 
