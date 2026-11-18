@@ -102,6 +102,23 @@ dialog input{width:100%;font:inherit;background:var(--card);color:var(--ink);bor
 .chip.plus{flex:none;width:42px;padding:0;font-size:22px;font-weight:800;line-height:1}
 .res.fler button{margin-top:8px}
 .res.fler button.vald{background:var(--acc);color:var(--accink)}
+.laddar{color:var(--mut);font-weight:700;padding:14px 4px;list-style:none}
+.snabbval{display:flex;flex-wrap:wrap;gap:6px}
+.snabbval button{height:38px;padding:0 14px;border:2px solid var(--line);border-radius:999px;background:var(--card);color:var(--ink);font-weight:700;font-size:14px;cursor:pointer}
+.snabbval button[aria-pressed="true"]{background:var(--acc);border-color:var(--acc);color:var(--accink)}
+.datumval{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:14px 0 4px;font-size:.9rem;font-weight:700;color:var(--mut)}
+.datumval input{font:inherit;font-weight:700;color:var(--ink);background:var(--bg);border:2px solid var(--line);border-radius:999px;padding:8px 14px;color-scheme:light dark}
+.histhuvud{display:flex;align-items:center;gap:14px;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+.histikon img{width:64px;height:64px}
+.histdatum{font-size:.9rem;font-weight:700;color:var(--mut)}
+.histtxt{font-size:1.25rem;font-weight:800;line-height:1.2}
+.histfakta{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0 6px}
+.histfakta>div{background:var(--bg);border-radius:16px;padding:10px 14px;display:flex;flex-direction:column;gap:2px}
+.histfakta .l{font-size:.8rem;font-weight:700;color:var(--mut)}
+.histfakta .v{font-size:1.1rem;font-weight:800}
+.histfakta .nb{display:flex;align-items:center;gap:5px;color:var(--ink)}
+.histfakta .nb svg{width:16px;height:16px;color:var(--rain)}
+.histtimmar{margin-top:8px}
 .close{margin-top:16px;width:100%;height:46px;border:0;border-radius:999px;background:var(--acc);color:var(--accink);font-weight:800;cursor:pointer}
 </style>
 </head>
@@ -258,6 +275,13 @@ async function load(){
   render(p,data);
 }
 
+// ---------- Gemensamma ikoner och färger ----------
+const IKON_DROPPE='<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5c-.3 0-.6.2-.8.5C9 6.6 5.5 11.2 5.5 14.6a6.5 6.5 0 0 0 13 0c0-3.4-3.5-8-5.7-11.6-.2-.3-.5-.5-.8-.5z"/></svg>';
+const IKON_SNO='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2v20M3.3 7l17.4 10M3.3 17l17.4-10"/><path d="M9.5 3.5 12 6l2.5-2.5M9.5 20.5 12 18l2.5 2.5M3.6 10.4l3.4-1-1-3.4M20.4 13.6l-3.4 1 1 3.4M6 17.4l1-3.4-3.4-1M18 6.6l-1 3.4 3.4 1"/></svg>';
+const VECKODAG=['Söndag','Måndag','Tisdag','Onsdag','Torsdag','Fredag','Lördag'];
+const FARG=['#e5484d','#f08a24','#e2b007','#2f9e5b','#1f8fd1','#6e56cf','#d6409f']; // mån–sön som i Mat
+const dagFarg=ds=>FARG[(new Date(ds+'T12:00').getDay()+6)%7];
+
 // ---------- Rita upp ----------
 function render(p,d){
   const c=d.current, [txt,emo]=wx(c.weather_code,c.is_day);
@@ -270,16 +294,11 @@ function render(p,d){
   const today=isoDate(now), tm=isoDate(new Date(now.getTime()+864e5));
   const dagNamn=ds=> ds===today?'Idag':ds===tm?'Imorgon':DAGAR[new Date(ds+'T12:00').getDay()];
 
-  const IKON_DROPPE='<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5c-.3 0-.6.2-.8.5C9 6.6 5.5 11.2 5.5 14.6a6.5 6.5 0 0 0 13 0c0-3.4-3.5-8-5.7-11.6-.2-.3-.5-.5-.8-.5z"/></svg>';
-  const IKON_SNO='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2v20M3.3 7l17.4 10M3.3 17l17.4-10"/><path d="M9.5 3.5 12 6l2.5-2.5M9.5 20.5 12 18l2.5 2.5M3.6 10.4l3.4-1-1-3.4M20.4 13.6l-3.4 1 1 3.4M6 17.4l1-3.4-3.4-1M18 6.6l-1 3.4 3.4 1"/></svg>';
   // Snö om minst hälften av nederbörden kommer som snö (eller koden säger snö om delarna saknas)
   const arSno=i=>{ const tot=d.daily.precipitation_sum[i]||0;
     if(d.daily.rain_sum&&d.daily.rain_sum[i]!=null){ const flytande=(d.daily.rain_sum[i]||0)+(d.daily.showers_sum?.[i]||0); return tot>0 && (tot-flytande)>=tot/2; }
     return [71,73,75,77,85,86].includes(d.daily.weather_code[i]); };
   const IKON_UPP='<svg viewBox="0 0 512 512" aria-hidden="true"><image href="ikoner/sol_halv.png" width="512" height="512"/><g fill="none" stroke="currentColor" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"><path d="M264 225V50M200 112l64-64 64 64"/></g></svg>', IKON_NED='<svg viewBox="0 0 512 512" aria-hidden="true"><image href="ikoner/sol_halv.png" width="512" height="512"/><g fill="none" stroke="currentColor" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"><path d="M264 40v175M200 153l64 64 64-64"/></g></svg>', IKON_LJUS='<img src="ikoner/day_clear.svg" alt="">';
-  const VECKODAG=['Söndag','Måndag','Tisdag','Onsdag','Torsdag','Fredag','Lördag'];
-  const FARG=['#e5484d','#f08a24','#e2b007','#2f9e5b','#1f8fd1','#6e56cf','#d6409f']; // mån–sön som i Mat
-  const dagFarg=ds=>FARG[(new Date(ds+'T12:00').getDay()+6)%7];
   $('#app').innerHTML = `
   <div class="dagrub">${VECKODAG[now.getDay()]} ${today} · ${pad(now.getHours())}:${pad(now.getMinutes())}</div>
   <div class="kort">
@@ -314,8 +333,141 @@ function render(p,d){
     <div><div class="sunikon">${IKON_UPP}</div><div class="v">${d.daily.sunrise[0].slice(11,16)}</div><div class="l">Soluppgång</div></div>
     <div><div class="sunikon">${IKON_NED}</div><div class="v">${d.daily.sunset[0].slice(11,16)}</div><div class="l">Solnedgång</div></div>
     <div><div class="sunikon">${IKON_LJUS}</div><div class="v">${dagsljus(d.daily.sunrise[0],d.daily.sunset[0])}</div><div class="l">Dagsljus</div></div>
-  </div></div>`;
+  </div></div>
+
+  <h2 class="rub">Senaste 7 dagarna</h2>
+  <ul class="dagar" id="hist7"><li class="laddar">Hämtar…</li></ul>
+
+  <h2 class="rub">Hur var vädret en viss dag?</h2>
+  <div class="kort">
+    <div class="snabbval" id="snabbval">
+      <button type="button" data-ar="0" data-d="7">För en vecka sedan</button>
+      <button type="button" data-ar="1">För 1 år sedan</button>
+      <button type="button" data-ar="5">För 5 år sedan</button>
+      <button type="button" data-ar="10">För 10 år sedan</button>
+    </div>
+    <label class="datumval">Eller välj datum <input type="date" id="histDatum" min="1940-01-01" max="${igar()}" value="${histVald}"></label>
+    <div id="histDag"><div class="laddar">Hämtar…</div></div>
+  </div>`;
+  renderHistorik(p);
 }
+
+// ---------- Tillbaka i tiden ----------
+// Data äldre än ca 80 dagar hämtas från Open-Meteos arkiv (ända tillbaka till 1940),
+// nyare dagar från den vanliga väder-API:n (arkivet ligger några dagar efter).
+const histCache = new Map();
+const dagPlus = (ds,n) => { const t=new Date(ds+'T12:00'); t.setDate(t.getDate()+n); return isoDate(t); };
+const igar = () => dagPlus(isoDate(new Date()),-1);
+const arSedan = n => { const t=new Date(); t.setFullYear(t.getFullYear()-n); return isoDate(t); };
+let histVald = arSedan(1);
+let histSample = false;
+
+async function hamtaPeriod(p,start,slut,medTimmar){
+  const nyckel=[p.lat,p.lon,start,slut,medTimmar].join('|');
+  if(histCache.has(nyckel)) return histCache.get(nyckel);
+  const dagarSedan=(new Date(isoDate(new Date())+'T12:00')-new Date(start+'T12:00'))/864e5;
+  const bas = dagarSedan<80 ? 'https://api.open-meteo.com/v1/forecast' : 'https://archive-api.open-meteo.com/v1/archive';
+  const url = bas+'?latitude='+p.lat+'&longitude='+p.lon+'&start_date='+start+'&end_date='+slut+
+    '&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,snowfall_sum,wind_speed_10m_max,sunshine_duration,sunrise,sunset'+
+    (medTimmar?'&hourly=temperature_2m,weather_code,precipitation':'')+
+    '&timezone=Europe%2FStockholm&wind_speed_unit=ms';
+  let data;
+  try{ const res=await fetch(url); if(!res.ok) throw new Error('HTTP '+res.status); data=await res.json(); histSample=false; }
+  catch(e){ data=sampleHist(start,slut,medTimmar); histSample=true; }
+  histCache.set(nyckel,data);
+  return data;
+}
+// Påhittad historik när internet inte nås (förhandsvisningen)
+function sampleHist(start,slut,medTimmar){
+  const daily={time:[],weather_code:[],temperature_2m_max:[],temperature_2m_min:[],precipitation_sum:[],snowfall_sum:[],wind_speed_10m_max:[],sunshine_duration:[],sunrise:[],sunset:[]};
+  const koder=[3,61,2,71,0,63,1,45];
+  for(let ds=start;ds<=slut;ds=dagPlus(ds,1)){
+    const n=new Date(ds+'T12:00').getDate(), k=koder[n%koder.length];
+    daily.time.push(ds); daily.weather_code.push(k);
+    daily.temperature_2m_max.push(3+(n%5)); daily.temperature_2m_min.push(-3+(n%4));
+    daily.precipitation_sum.push([61,63,71].includes(k)?2.4:0); daily.snowfall_sum.push(k===71?1.7:0);
+    daily.wind_speed_10m_max.push(4+n%6); daily.sunshine_duration.push(k<=2?14400:3600);
+    daily.sunrise.push(ds+'T07:50'); daily.sunset.push(ds+'T15:25');
+  }
+  const d={daily};
+  if(medTimmar){
+    d.hourly={time:[],temperature_2m:[],weather_code:[],precipitation:[]};
+    for(let h=0;h<24;h++){ d.hourly.time.push(start+'T'+pad(h)+':00'); d.hourly.temperature_2m.push(+(daily.temperature_2m_min[0]+(daily.temperature_2m_max[0]-daily.temperature_2m_min[0])*Math.max(0,Math.sin((h-6)/24*2*Math.PI))).toFixed(1)); d.hourly.weather_code.push(daily.weather_code[0]); d.hourly.precipitation.push(daily.precipitation_sum[0]/24); }
+  }
+  return d;
+}
+// Snö om minst hälften av nederbörden föll som snö (1 cm snö ≈ 1,43 mm vatten)
+function histSno(dd,i){ const tot=dd.precipitation_sum[i]||0, sno=(dd.snowfall_sum?.[i]||0)*10/7; return tot>0 && sno>=tot/2; }
+function nedbordText(dd,i){
+  const ps=dd.precipitation_sum[i]; if(ps==null) return '';
+  return ps>=0.5 ? `${histSno(dd,i)?IKON_SNO:IKON_DROPPE}<span>${ps.toFixed(1)} mm</span>` : '';
+}
+const fmt = v => v==null ? '–' : r(v)+'°';
+
+async function renderHistorik(p){
+  // Senaste 7 dagarna
+  const slut=igar(), start=dagPlus(slut,-6);
+  const h7=await hamtaPeriod(p,start,slut,false);
+  if(places[cur]!==p) return;
+  const dd=h7.daily, idx=dd.time.map((_,i)=>i).reverse(); // nyast först
+  const v=dd.temperature_2m_min.concat(dd.temperature_2m_max).filter(x=>x!=null);
+  const mn=Math.min(...v), span=Math.max(Math.max(...v)-mn,1);
+  const el7=$('#hist7');
+  if(el7) el7.innerHTML = idx.map(i=>{
+    const ds=dd.time[i], [t2,e]=wx(dd.weather_code[i],1), lo=dd.temperature_2m_min[i], hi=dd.temperature_2m_max[i];
+    const namn = ds===slut ? 'Igår' : DAGAR[new Date(ds+'T12:00').getDay()];
+    const bar = lo==null||hi==null ? '' : `<i style="left:${(lo-mn)/span*100}%;width:${Math.max((hi-lo)/span*100,3)}%"></i>`;
+    return `<li class="day" style="--dc:${dagFarg(ds)}"><div class="n">${namn}<small>${ds}</small></div><div class="e" title="${t2}">${e}</div>
+      <div class="lo">${fmt(lo)}</div><div class="range">${bar}</div><div class="hi">${fmt(hi)}</div>
+      <div class="rain">${nedbordText(dd,i)||'&nbsp;'}</div></li>`;}).join('');
+  if(histSample) visaHistNotis();
+
+  // Snabbval + datumväljare
+  document.querySelectorAll('#snabbval button').forEach(b=>b.onclick=()=>{
+    histVald = b.dataset.d ? dagPlus(isoDate(new Date()),-b.dataset.d) : arSedan(+b.dataset.ar);
+    $('#histDatum').value=histVald; visaDag(p);
+  });
+  $('#histDatum').onchange=e=>{ if(e.target.value){ histVald=e.target.value; visaDag(p); } };
+  visaDag(p);
+}
+
+async function visaDag(p){
+  const ds=histVald;
+  document.querySelectorAll('#snabbval button').forEach(b=>{
+    const m = b.dataset.d ? dagPlus(isoDate(new Date()),-b.dataset.d) : arSedan(+b.dataset.ar);
+    b.setAttribute('aria-pressed', m===ds);
+  });
+  const ruta=$('#histDag'); if(!ruta) return;
+  ruta.innerHTML='<div class="laddar">Hämtar…</div>';
+  const h=await hamtaPeriod(p,ds,ds,true);
+  if(places[cur]!==p || histVald!==ds || !$('#histDag')) return;
+  const dd=h.daily;
+  if(!dd || !dd.time || dd.temperature_2m_max[0]==null){ $('#histDag').innerHTML='<div class="laddar">Det finns ingen väderdata för den dagen ännu.</div>'; return; }
+  const [txt,ikon]=wx(dd.weather_code[0],1);
+  const wd=new Date(ds+'T12:00').getDay();
+  const sol = dd.sunshine_duration?.[0]!=null ? (dd.sunshine_duration[0]/3600).toFixed(1).replace('.',',')+' h' : '–';
+  const upp=dd.sunrise[0]?.slice(11,16), ned=dd.sunset[0]?.slice(11,16);
+  const timmar = h.hourly ? h.hourly.time.map((t,i)=>{
+    const hh=t.slice(11,13), dag = upp&&ned ? (t.slice(11,16)>=upp && t.slice(11,16)<ned) : true;
+    const [,e]=wx(h.hourly.weather_code[i], dag?1:0); const pr=h.hourly.precipitation[i];
+    return `<div class="h"><div class="t">${hh}</div><div class="e">${e}</div><div class="d">${fmt(h.hourly.temperature_2m[i])}</div><div class="p">${pr>=0.1?pr.toFixed(1)+' mm':''}</div></div>`;
+  }).join('') : '';
+  $('#histDag').innerHTML = `
+    <div class="histhuvud"><div class="histikon">${ikon}</div>
+      <div><div class="histdatum">${VECKODAG[wd]} ${ds}</div><div class="histtxt">${txt} i ${esc(p.namn)}</div></div></div>
+    <div class="histfakta">
+      <div><span class="l">Temperatur</span><span class="v">${fmt(dd.temperature_2m_min[0])} till ${fmt(dd.temperature_2m_max[0])}</span></div>
+      <div><span class="l">Nederbörd</span><span class="v nb">${(dd.precipitation_sum[0]||0)>=0.5?(histSno(dd,0)?IKON_SNO:IKON_DROPPE):''}${(dd.precipitation_sum[0]||0).toFixed(1)} mm</span></div>
+      <div><span class="l">Max vind</span><span class="v">${dd.wind_speed_10m_max[0]!=null?r(dd.wind_speed_10m_max[0])+' m/s':'–'}</span></div>
+      <div><span class="l">Solsken</span><span class="v">${sol}</span></div>
+    </div>
+    ${timmar?`<div class="hours histtimmar">${timmar}</div>`:''}`;
+  if(histSample) visaHistNotis();
+}
+function visaHistNotis(){
+  if(!$('#notice').innerHTML) $('#notice').innerHTML='<div class="notice">Kunde inte hämta riktig historik – visar <b>påhittade exempeldata</b>. På GitHub Pages hämtas riktig data.</div>';
+}
+
 function dagsljus(a,b){ const m=(new Date(b)-new Date(a))/6e4; return `${Math.floor(m/60)} h ${pad(Math.round(m%60))} min`; }
 
 // ---------- Inställningar ----------
