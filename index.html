@@ -102,6 +102,12 @@ dialog input{width:100%;font:inherit;background:var(--card);color:var(--ink);bor
 .chip.plus{flex:none;width:42px;padding:0;font-size:22px;font-weight:800;line-height:1}
 .res.fler button{margin-top:8px}
 .res.fler button.vald{background:var(--acc);color:var(--accink)}
+.arkivknapp{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;height:56px;margin-top:22px;border:0;border-radius:999px;background:var(--acc);color:var(--accink);font-weight:800;font-size:1.05rem;cursor:pointer;box-shadow:0 2px 0 var(--line)}
+.arkivknapp svg{width:22px;height:22px}
+.arkivtopp{display:flex;align-items:center;gap:14px;margin:24px 0 4px}
+.arkivrubrik{font-size:1.5rem;font-weight:800;line-height:1.1}
+.arkivort{color:var(--mut);font-weight:700;font-size:.92rem}
+#arkiv .rub:first-of-type{margin-top:22px}
 .laddar{color:var(--mut);font-weight:700;padding:14px 4px;list-style:none}
 .snabbval{display:flex;flex-wrap:wrap;gap:6px}
 .snabbval button{height:38px;padding:0 14px;border:2px solid var(--line);border-radius:999px;background:var(--card);color:var(--ink);font-weight:700;font-size:14px;cursor:pointer}
@@ -130,6 +136,7 @@ dialog input{width:100%;font:inherit;background:var(--card);color:var(--ink);bor
   </div>
   <div id="notice"></div>
   <div id="app"><div class="dagrub">Hämtar väder…</div></div>
+  <div id="arkiv" hidden></div>
   <div class="foot">Väderdata: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> (bl.a. SMHI:s och MET Norways modeller)</div>
 </main>
 
@@ -273,6 +280,7 @@ async function load(){
   try{ data = await fetchWeather(p); $('#notice').innerHTML=''; }
   catch(e){ data = sampleWeather(); $('#notice').innerHTML='<div class="notice">Kunde inte hämta riktigt väder – visar <b>påhittat exempelväder</b>. När appen ligger på GitHub Pages hämtas riktig data.</div>'; }
   render(p,data);
+  visaVy();
 }
 
 // ---------- Gemensamma ikoner och färger ----------
@@ -335,21 +343,10 @@ function render(p,d){
     <div><div class="sunikon">${IKON_LJUS}</div><div class="v">${dagsljus(d.daily.sunrise[0],d.daily.sunset[0])}</div><div class="l">Dagsljus</div></div>
   </div></div>
 
-  <h2 class="rub">Senaste 7 dagarna</h2>
-  <ul class="dagar" id="hist7"><li class="laddar">Hämtar…</li></ul>
-
-  <h2 class="rub">Hur var vädret en viss dag?</h2>
-  <div class="kort">
-    <div class="snabbval" id="snabbval">
-      <button type="button" data-ar="0" data-d="7">För en vecka sedan</button>
-      <button type="button" data-ar="1">För 1 år sedan</button>
-      <button type="button" data-ar="5">För 5 år sedan</button>
-      <button type="button" data-ar="10">För 10 år sedan</button>
-    </div>
-    <label class="datumval">Eller välj datum <input type="date" id="histDatum" min="1940-01-01" max="${igar()}" value="${histVald}"></label>
-    <div id="histDag"><div class="laddar">Hämtar…</div></div>
-  </div>`;
-  renderHistorik(p);
+  <button type="button" class="arkivknapp">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v4.5h4.5"/><path d="M12 7.5V12l3 2"/></svg>
+    Väderarkiv
+  </button>`;
 }
 
 // ---------- Tillbaka i tiden ----------
@@ -404,6 +401,28 @@ function nedbordText(dd,i){
 }
 const fmt = v => v==null ? '–' : r(v)+'°';
 
+function renderArkiv(p){
+  $('#arkiv').innerHTML = `
+  <div class="arkivtopp">
+    <button type="button" class="icon-btn" onclick="tillbaka()" aria-label="Tillbaka" title="Tillbaka"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <div><div class="arkivrubrik">Väderarkiv</div><div class="arkivort">${esc(p.namn)}</div></div>
+  </div>
+  <h2 class="rub">Senaste 7 dagarna</h2>
+  <ul class="dagar" id="hist7"><li class="laddar">Hämtar…</li></ul>
+
+  <h2 class="rub">Hur var vädret en viss dag?</h2>
+  <div class="kort">
+    <div class="snabbval" id="snabbval">
+      <button type="button" data-ar="0" data-d="7">För en vecka sedan</button>
+      <button type="button" data-ar="1">För 1 år sedan</button>
+      <button type="button" data-ar="5">För 5 år sedan</button>
+      <button type="button" data-ar="10">För 10 år sedan</button>
+    </div>
+    <label class="datumval">Eller välj datum <input type="date" id="histDatum" min="1940-01-01" max="${igar()}" value="${histVald}"></label>
+    <div id="histDag"><div class="laddar">Hämtar…</div></div>
+  </div>`;
+  renderHistorik(p);
+}
 async function renderHistorik(p){
   // Senaste 7 dagarna
   const slut=igar(), start=dagPlus(slut,-6);
@@ -510,6 +529,19 @@ $('#q').oninput=e=>{
 };
 
 // ---------- Start ----------
+// ---------- Vyer: väder / väderarkiv (#arkiv) ----------
+function visaVy(){
+  const p=places[cur], arkiv = location.hash==='#arkiv' && !!p;
+  $('#app').hidden = arkiv; $('#arkiv').hidden = !arkiv;
+  if(arkiv){ if($('#arkiv').dataset.ort!==String(cur)+p.namn){ $('#arkiv').dataset.ort=String(cur)+p.namn; renderArkiv(p); } }
+  else { $('#arkiv').dataset.ort=''; }
+}
+function tillbaka(){ if(history.state && history.state.fran==='vader') history.back(); else location.hash=''; }
+window.addEventListener('hashchange',()=>{ visaVy(); scrollTo(0,0); });
+// så att Androids tillbaka-knapp leder från arkivet till vädret
+document.addEventListener('click',e=>{ if(e.target.closest('.arkivknapp')){ e.preventDefault(); history.pushState({fran:'vader'},'','#arkiv'); visaVy(); scrollTo(0,0); } },true);
+window.addEventListener('popstate',()=>{ visaVy(); });
+
 renderPlaces(); load();
 if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
 setInterval(load, 30*60*1000); // uppdatera var 30:e minut
